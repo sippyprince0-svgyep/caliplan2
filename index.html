@@ -389,9 +389,9 @@ setInterval(tick,1000);
 let RE=0;
 function rest(s){RE=Date.now()+s*1000;left=s;clearInterval(tm);show();tm=setInterval(()=>{left=Math.max(0,Math.ceil((RE-Date.now())/1000));if(left<=0){clearInterval(tm);restEnd();try{navigator.vibrate&&navigator.vibrate([200,100,200])}catch(e){}}show()},250)}
 function show(){const b=$("#rt");b.style.display=left>0?"flex":"none";$("#rtt").textContent="Rest "+Math.floor(left/60)+":"+String(left%60).padStart(2,"0")}
-/* Adaptive hold: keep the same target for 4-6 successful sessions before it goes up.
-   4 days if every set beat the target (felt easy), 5 normally, 6 if you missed the target at this level. Missed sessions never count. */
-function holdOk(e,spare,ok,up2){S.hd=S.hd||{};const k=(e.tk?e.tk+':'+e.si:'m:'+e.n)+':'+e.r,h=S.hd[k]||(S.hd[k]={n:0,m:0});if(!ok){h.m++;return false}h.n++;const need=h.m>0?6:(spare?4:5);if(h.n>=need){delete S.hd[k];return true}up2.push(e.n+': day '+h.n+' of '+need+' at '+e.r+'. Same target next time.');return false}
+/* Two-speed hold: small rep steps need 2 successful sessions, the final step of a level (goal reached) needs 3.
+   If you missed the target at this rep count before (struggled), it needs 5 successful sessions before moving up. Missed sessions never count. */
+function holdOk(e,spare,ok,up2){S.hd=S.hd||{};const k=(e.tk?e.tk+':'+e.si:'m:'+e.n)+':'+e.r,h=S.hd[k]||(S.hd[k]={n:0,m:0});if(!ok){h.m++;return false}h.n++;const s=e.tk&&TR[e.tk]?TR[e.tk][e.si]:null,atGoal=!!(s&&e.r>=s.g),need=h.m>0?5:(atGoal?3:2);if(h.n>=need){delete S.hd[k];return true}up2.push(e.n+': session '+h.n+' of '+need+' at '+e.r+'. Same target next time.');return false}
 function fin(){const p=P(),d=p.days[S.day],[n]=dstat(S.day);let vol=0;d.e.forEach((e,i)=>{for(let j=0;j<ns(e);j++)if(S.done[`${S.wk}-${S.day}-${i}-${j}`])vol+=S.done[`${S.wk}-${S.day}-${i}-${j}`]});
 const min=Math.max(1,Math.round((Date.now()-(S.ses||Date.now()))/6e4));
 if(n>0)S.hist.push({t:Date.now(),n:d.n,dn:n,vol,min});S.ses=null;
